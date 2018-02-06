@@ -127,6 +127,8 @@ function! LoadTags()
     let cur = expand("%:p:h")                                       " cur file location
     exe "lcd " . cur
     let root = fnamemodify(findfile("cscope.files", ".;"), ":p:h")  " project root
+    lcd -
+    exe "lcd " . root
     if (!empty(root))
         if (filereadable("tags"))                                   " load ctags
             exe "set tags=" . root . "/tags" 
