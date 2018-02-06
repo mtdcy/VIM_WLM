@@ -1,16 +1,16 @@
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""{{{
 " Copyright 2018 (c) Chen Fang
-" 
+"
 " Redistribution and use in source and binary forms, with or without
 " modification, are permitted provided that the following conditions are met:
-" 
+"
 " 1. Redistributions of source code must retain the above copyright notice, this
 " list of conditions and the following disclaimer.
-" 
+"
 " 2. Redistributions in binary form must reproduce the above copyright notice,
 " this list of conditions and the following disclaimer in the documentation
 " and/or other materials provided with the distribution.
-" 
+"
 " THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 " AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 " IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -21,10 +21,10 @@
 " CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 " OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 " OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-" 
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+"
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}
 
-" => General Options "{{{ 
+" => General Options "{{{
 
 " set color and theme
 set t_Co=256
@@ -35,20 +35,18 @@ colorscheme solarized
 set guifont=Droid\ Sans\ Mono:h12
 "set gfn=Vera\ Sans\ YuanTi\ Mono:h10
 "set gfn=Droid\ Sans\ Fallback:h10
-set antialias
+set antialias       " Mac OS only
 
 " 显示行号
-set number 
+set number
 
-" 文件编码 
+" 文件编码
 set fileencoding=utf-8
-set fileencodings=utf-8,gb18030,latin1
+set fileencodings=utf-8,gb18030,gbk,latin1
 
 " 文件类型
 set fileformat=unix
 set ffs=unix,dos
-nmap <leader>fd :se ff=dos<cr>
-nmap <leader>fu :se ff=unix<cr>
 
 " 不备份文件
 set nobackup
@@ -62,31 +60,29 @@ set hidden
 
 " 高亮当前行
 set cursorline
-set nocursorcolumn
 
 " 语法高亮
 syntax on
 
 " 使用非兼容模式
-set nocompatible    " need by vundle 
+set nocompatible
 
 " 有关搜索的选项
 set hls
-set incsearch   
-"set ic smartcase 
+set incsearch
+"set ic smartcase
 
 " 一直启动鼠标
 set mouse=a
 
+" show command on the bottom of the screen
+set showcmd
+
 " 设置mapleader
 let mapleader = ";"
-let g:mapleader = ";"
 
-" 自动跳转到上一次打开的位置
-autocmd BufReadPost *
-			\ if line("'\"") > 0 && line ("'\"") <= line("$") |
-			\ exe "normal! g'\"" |
-			\ endif 
+" set backspace behavior
+set backspace=indent,eol,start
 
 " Smart way to move btw. windows
 map <C-j> <C-W>j
@@ -94,15 +90,14 @@ map <C-k> <C-W>k
 map <C-h> <C-W>h
 map <C-l> <C-W>l
 
-" For completion. if pumvisible, then next item; else tab
-inoremap <expr><TAB>    pumvisible() ? "\<C-n>" : "\<TAB>"
-
 " set completopt and preview window on the bottom
 set completeopt=menuone,longest,preview
 set splitbelow
 
-" }}}
+" For completion. if pumvisible, then next item; else tab
+inoremap <expr><TAB> pumvisible() ? "\<C-n>" : "\<TAB>"
 
+" }}}
 
 " => Tags Management " {{{
 " set cscope key map
@@ -118,11 +113,11 @@ nnoremap <leader>ff :cs find f <C-R>=expand("<cfile>")<CR><CR>      " f: find th
 nnoremap <leader>fi :cs find i ^<C-R>=expand("<cfile>")<CR>$<CR>    " i: find files #include this file
 
 " FIXME: use vim's filetype detection
-let g:tags_supported_types = '\.\(asm\|c\|cpp\|cc\|h\|\java\|py\)$'
+let g:tags_interested_types = '\.\(asm\|c\|cpp\|cc\|h\|\java\|py\)$'
 let g:tags_ctags_cmd = "ctags --fields=+ailS --c-kinds=+p --c++-kinds=+p --sort=no --extra=+q"
 let g:tags_cscope_cmd = "cscope -bq"
 
-" auto load tags and cscope db
+" load tags and cscope db
 function! LoadTags()
     exe "lcd " . expand("%:p:h")
     let root = fnamemodify(findfile("cscope.files", ".;"), ":p:h")  " project root
@@ -130,25 +125,24 @@ function! LoadTags()
     exe "lcd " . root
     if (!empty(root))
         if (filereadable("tags"))                                   " load ctags
-            exe "set tags=" . root . "/tags" 
+            exe "set tags=" . root . "/tags"
         endif
         if (filereadable("cscope.out"))                             " load cscope db
             set nocscopeverbose
-            exe "cs add " . root . "/cscope.out " . root 
+            exe "cs add " . root . "/cscope.out " . root
             set cscopeverbose
         endif
     endif
     lcd -
 endfunction
-au BufEnter * call LoadTags()
 
-" cmd for create tags and cscope db
-function! CreateTags() 
+" create tags and cscope db
+function! CreateTags()
     let root = input("project root: ", expand("%:p:h"))             " project root
     exe "lcd " . root
     let files = glob("**", v:false, v:true)
     call filter(files, 'filereadable(v:val)')                       " filter out directory
-    call filter(files, 'v:val =~# g:tags_supported_types')          " only interested files 
+    call filter(files, 'v:val =~# g:tags_interested_types')          " only interested files
     call writefile(files, "cscope.files")                           " save list
     exe "silent !" . g:tags_cscope_cmd . " -i cscope.files"
     exe "silent !" . g:tags_ctags_cmd . " -L cscope.files"
@@ -156,29 +150,35 @@ function! CreateTags()
     call LoadTags()
 endfunction
 
-" auto update tags and cscope db if loaded
-function! UpdateTags() 
+" update tags and cscope db if loaded
+function! UpdateTags()
     exe "lcd " . expand("%:p:h")
-    let root = fnamemodify(findfile("cscope.files", ".;"), ":p:h")  " project root 
+    let root = fnamemodify(findfile("cscope.files", ".;"), ":p:h")  " project root
     lcd -
     exe "lcd " . root
     let file = fnamemodify(expand("%:p"), ":.")                     " path related to project root
-    if match(file, g:tags_supported_types) >= 0
+    if match(file, g:tags_interested_types) >= 0
         if (!empty(root))
             if (filewritable("tags"))                               " update ctags
                 exe "silent !" . g:tags_ctags_cmd . " " . file
                 " no need to reload
             endif
             if (filewritable("cscope.out"))                         " update cscope db and reload
-                exe "silent !" . g:tags_cscope_cmd . " " . file 
+                exe "silent !" . g:tags_cscope_cmd . " " . file
                 exe "silent cs reset"
             endif
         endif
     endif
     lcd -
 endfunction
-" update tags on :w
-au BufWritePost * call UpdateTags()
+
+augroup tagsmngr
+    au!
+    " load tags on BufEnter
+    au BufEnter * call LoadTags()
+    " update tags on :w
+    au BufWritePost * call UpdateTags()
+augroup END
 
 
 "}}}
@@ -190,7 +190,7 @@ au BufWritePost * call UpdateTags()
 " sw    - shiftwidth    - 自动缩进宽度
 " et    - expandtab     - 是否展开tab
 " tw    - textwidth     - 文本宽
-" ai    - autoindent 
+" ai    - autoindent
 
 " For all
 set noautochdir 		        " may cause problem to some plugins
@@ -200,15 +200,34 @@ filetype plugin indent on
 " common settings
 set ts=4 sts=4 sw=4 et ff=unix
 
-" For c/c++ 
-au FileType c,cpp setlocal ts=4 sts=4 sw=4 tw=79 et ff=unix
+" fold default by marker
+set foldmethod=marker
+
+function! JumpToLastPos()
+    if line("'\"") > 0 && line ("'\"") <= line("$") && &ft !~# 'commit'
+        exe "normal! g'\""
+    endif
+endfunction
+
+" autocmd for all files
+augroup files
+    au!
+    " 自动跳转到上一次打开的位置
+    au BufReadPost * call JumpToLastPos()
+augroup END
+
+" For c/c++
+augroup cfiles
+    au!
+    au FileType c,cpp setlocal tw=79 ff=unix
+    au FileType c,cpp setlocal fdm=syntax
+augroup END
 
 "}}}
 
-
 " => Plugin "{{{
 " NERDTreeToggle
-nmap <F9> :NERDTreeToggle <CR> 
+nmap <F9> :NERDTreeToggle <CR>
 
 " tagbar [FIXME: tagbar use on fly tags, but we have loaded a tag file]
 nmap <F10> :TagbarToggle<CR>
@@ -234,7 +253,7 @@ let g:acp_enableAtStartup = 0
 let g:neocomplete#enable_smart_case = 1
 " <TAB>: completion.
 "inoremap <expr><TAB> pumvisible() ? neocomplete#complete_common_string() : "\<TAB>"
-" Set minimum match keyword length. 
+" Set minimum match keyword length.
 let g:neocomplete#auto_completion_start_length = 1
 " Set minimum syntax keyword length.
 let g:neocomplete#sources#syntax#min_keyword_length = 3
@@ -271,8 +290,12 @@ let g:jedi#auto_initialization = 1
 " jedi settings
 let g:jedi#completions_command = '<C-n>'
 let g:jedi#show_call_signatures = "2"
-" disable neocomplete for python
-au FileType python NeoCompleteLock
+
+augroup pluginsmngr
+    au!
+    " disable neocomplete for python
+    au FileType python NeoCompleteLock
+augroup END
 
 " }}}
 
