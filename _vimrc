@@ -150,8 +150,8 @@ function! CreateTags()
     "let files = systemlist("find . -type f")                        " FIXME: this won't work on windows
     call filter(files, 'v:val =~# g:tags_supported_types')          " only interested files 
     call writefile(files, "cscope.files")                           " save list
-    exe "!" . g:tags_cscope_cmd . " -i cscope.files"
-    exe "!" . g:tags_ctags_cmd . " -L cscope.files"
+    exe "silent !" . g:tags_cscope_cmd . " -i cscope.files"
+    exe "silent !" . g:tags_ctags_cmd . " -L cscope.files"
     lcd -
     call LoadTags()
 endfunction
