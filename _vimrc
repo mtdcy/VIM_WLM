@@ -124,8 +124,7 @@ let g:tags_cscope_cmd = "cscope -bq"
 
 " auto load tags and cscope db
 function! LoadTags()
-    let cur = expand("%:p:h")                                       " cur file location
-    exe "lcd " . cur
+    exe "lcd " . expand("%:p:h")
     let root = fnamemodify(findfile("cscope.files", ".;"), ":p:h")  " project root
     lcd -
     exe "lcd " . root
@@ -149,7 +148,6 @@ function! CreateTags()
     exe "lcd " . root
     let files = glob("**", v:false, v:true)
     call filter(files, 'filereadable(v:val)')                       " filter out directory
-    "let files = systemlist("find . -type f")                        " FIXME: this won't work on windows
     call filter(files, 'v:val =~# g:tags_supported_types')          " only interested files 
     call writefile(files, "cscope.files")                           " save list
     exe "silent !" . g:tags_cscope_cmd . " -i cscope.files"
@@ -160,8 +158,7 @@ endfunction
 
 " auto update tags and cscope db if loaded
 function! UpdateTags() 
-    let cur = expand("%:p:h")                                       " current file location
-    exe "lcd " . cur
+    exe "lcd " . expand("%:p:h")
     let root = fnamemodify(findfile("cscope.files", ".;"), ":p:h")  " project root 
     lcd -
     exe "lcd " . root
@@ -196,15 +193,15 @@ au BufWritePost * call UpdateTags()
 " ai    - autoindent 
 
 " For all
-"set noautochdir 		        " may cause problem to some plugins
+set noautochdir 		        " may cause problem to some plugins
+
+filetype plugin indent on
+
+" common settings
+set ts=4 sts=4 sw=4 et ff=unix
 
 " For c/c++ 
 au FileType c,cpp setlocal ts=4 sts=4 sw=4 tw=79 et ff=unix
-
-" For python 
-au FileType python setlocal ts=4 sts=4 sw=4 tw=79 et ff=unix
-
-au FileType zsh,vim setlocal ts=4 sts=4 sw=4 tw=79 et ff=unix
 
 "}}}
 
