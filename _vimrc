@@ -108,6 +108,9 @@ nnoremap <S-TAB> :bp<CR>
 
 set laststatus=2
 set statusline=[%{mode()}][%n]\ %<%F%m%r%q%w        " buffer property
+set statusline+=\ %#warningmsg#                     " syntastic 
+set statusline+=\ %{SyntasticStatuslineFlag()}      " syntastic
+set statusline+=%*                                  " syntastic: reset color
 set statusline+=%=                                  " separation
 set statusline+=\ %l/%L:%c\ %p%%                    " cursor position
 set statusline+=\ %y[%{&fenc}][%{&ff}]              " file property
@@ -259,6 +262,13 @@ inoremap <expr><C-l> neocomplete#complete_common_string()
 " jedi/python complete settings
 let g:jedi#completions_command = '<C-n>'
 let g:jedi#show_call_signatures = "2"
+
+" syntastic 
+let g:syntastic_always_populate_loc_list = 1
+let g:syntastic_auto_loc_list = 1
+let g:syntastic_check_on_open = 1
+let g:syntastic_check_on_wq = 0
+let g:syntastic_vim_checker = ['vint']
 
 function! SetAutoComplete()
     if &filetype == "python"
