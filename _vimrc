@@ -97,6 +97,10 @@ set splitbelow
 " For completion. if pumvisible, then next item; else tab
 inoremap <expr><TAB> pumvisible() ? "\<C-n>" : "\<TAB>"
 
+" For buffer explorer
+nnoremap <TAB> :bn<CR>
+nnoremap <S-TAB> :bp<CR>
+
 " }}}
 
 " => Status Line {{{
@@ -246,57 +250,27 @@ let g:tagbar_compact = 1                "
 let g:tagbar_iconchars = ['+', '-']     "
 let g:tagbar_autoshowtag = 1
 
-" neocompletion
+" neocomplete for c/cpp
 let g:neocomplete#enable_at_startup = 1
-" neocompletion settings
-" Disable AutoComplPop.
 let g:acp_enableAtStartup = 0
-" Use smartcase.
 let g:neocomplete#enable_smart_case = 1
-" <TAB>: completion.
-"inoremap <expr><TAB> pumvisible() ? neocomplete#complete_common_string() : "\<TAB>"
-" Set minimum match keyword length.
-let g:neocomplete#auto_completion_start_length = 1
-" Set minimum syntax keyword length.
-let g:neocomplete#sources#syntax#min_keyword_length = 3
-" Define dictionary.
-let g:neocomplete#sources#dictionary#dictionaries = {
-            \ 'default' : '',
-            \ 'vimshell' : $HOME.'/.vimshell_hist',
-            \ 'scheme' : $HOME.'/.gosh_completions'
-            \ }
-" Define keyword.
-if !exists('g:neocomplete#keyword_patterns')
-    let g:neocomplete#keyword_patterns = {}
-endif
-let g:neocomplete#keyword_patterns['default'] = '\h\w*'
-" Plugin key-mappings.
-inoremap <expr><C-g>    neocomplete#undo_completion()
-inoremap <expr><C-l>    neocomplete#complete_common_string()
-" Enable omni completion.
-autocmd FileType css setlocal omnifunc=csscomplete#CompleteCSS
-autocmd FileType html,markdown setlocal omnifunc=htmlcomplete#CompleteTags
-autocmd FileType javascript setlocal omnifunc=javascriptcomplete#CompleteJS
-autocmd FileType python setlocal omnifunc=pythoncomplete#Complete
-autocmd FileType xml setlocal omnifunc=xmlcomplete#CompleteTags
-" Enable heavy omni completion.
-if !exists('g:neocomplete#sources#omni#input_patterns')
-    let g:neocomplete#sources#omni#input_patterns = {}
-endif
-"let g:neocomplete#sources#omni#input_patterns.php = '[^. \t]->\h\w*\|\h\w*::'
-let g:neocomplete#sources#omni#input_patterns.c = '[^.[:digit:] *\t]\%(\.\|->\)'
-let g:neocomplete#sources#omni#input_patterns.cpp = '[^.[:digit:] *\t]\%(\.\|->\)\|\h\w*::'
+inoremap <expr><C-l> neocomplete#complete_common_string()
 
-" jedi completion
-let g:jedi#auto_initialization = 1
-" jedi settings
+" jedi/python complete settings
 let g:jedi#completions_command = '<C-n>'
 let g:jedi#show_call_signatures = "2"
 
+function! SetAutoComplete()
+    if &filetype == "python"
+        NeoCompleteLock         " lock neocomplete
+    else
+        NeoCompleteUnlock       " unlock neocomplete
+    endif
+endfunction
+
 augroup pluginsmngr
     au!
-    " disable neocomplete for python
-    au FileType python NeoCompleteLock
+    au BufEnter * call SetAutoComplete()
 augroup END
 
 " }}}
