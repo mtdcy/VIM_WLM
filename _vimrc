@@ -99,6 +99,17 @@ inoremap <expr><TAB> pumvisible() ? "\<C-n>" : "\<TAB>"
 
 " }}}
 
+" => Status Line {{{
+
+
+set laststatus=2
+set statusline=[%{mode()}][%n]\ %<%F%m%r%q%w        " buffer property
+set statusline+=%=                                  " separation
+set statusline+=\ %l/%L:%c\ %p%%                    " cursor position
+set statusline+=\ %y[%{&fenc}][%{&ff}]              " file property
+
+" }}}
+
 " => Tags Management " {{{
 " set cscope key map
 set cscopequickfix=s-,g-,d-,c-,t-,e-,f-,i-                          " ???
@@ -234,15 +245,6 @@ nmap <F10> :TagbarToggle<CR>
 let g:tagbar_compact = 1                "
 let g:tagbar_iconchars = ['+', '-']     "
 let g:tagbar_autoshowtag = 1
-
-" syntastic
-"set statusline+=%#warningmsg#
-"set statusline+=%{SyntasticStatuslineFlag()}
-"set statusline+=%*
-let g:syntastic_always_populate_loc_list = 1
-let g:syntastic_auto_loc_list = 1
-" let g:syntastic_check_on_open = 1
-let g:syntastic_check_on_wq = 0
 
 " neocompletion
 let g:neocomplete#enable_at_startup = 1
