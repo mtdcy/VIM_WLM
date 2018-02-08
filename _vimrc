@@ -36,6 +36,8 @@ if has('mac')
     set guifont=Menlo:h12
     set linespace=2
     set antialias       " Mac OS only
+elseif has('win32')
+    set guifont=Consolas:h12
 else
     set guifont=Droid\ Sans\ Mono:h12
 endif
