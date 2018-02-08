@@ -36,8 +36,6 @@ if has('mac')
     set guifont=Menlo:h12
     set linespace=2
     set antialias       " Mac OS only
-elseif has('win32')
-    set guifont=Consolas:h12
 else
     set guifont=Droid\ Sans\ Mono:h12
 endif
@@ -281,8 +279,6 @@ let g:jedi#show_call_signatures = "2"
 " syntastic - auto errors check on :w
 let g:syntastic_always_populate_loc_list = 1
 let g:syntastic_auto_loc_list = 0
-let g:syntastic_error_symbol= '✗'
-let g:syntastic_warning_symbol = '➜'
 let g:syntastic_vim_checkers = ['vint']
 let g:syntastic_vim_vint_quiet_messages = { "!level" : "errors" }
 
@@ -294,7 +290,7 @@ function! SetPluginsForFiles()
         NeoCompleteEnable
     endif
 
-    if expand("%:p") =~# g:tags_interested_types 
+    if expand("%:p") =~# g:tags_interested_types  || &filetype ==? "vim"
         let g:syntastic_mode_map = {"mode":"active", "passive_filetypes":[]}
     else
         let g:syntastic_mode_map = {"mode":"passive", "active_filetypes":[]}
