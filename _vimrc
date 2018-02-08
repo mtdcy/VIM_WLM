@@ -32,10 +32,13 @@ set background=dark
 colorscheme solarized
 
 " 字体
-set guifont=Droid\ Sans\ Mono:h12
-"set gfn=Vera\ Sans\ YuanTi\ Mono:h10
-"set gfn=Droid\ Sans\ Fallback:h10
-set antialias       " Mac OS only
+if has('mac')
+    set guifont=Menlo:h12
+    set linespace=2
+    set antialias       " Mac OS only
+else
+    set guifont=Droid\ Sans\ Mono:h12
+endif
 
 " 显示行号
 set number
@@ -254,33 +257,51 @@ let g:tagbar_iconchars = ['+', '-']     "
 let g:tagbar_autoshowtag = 1
 
 " neocomplete for c/cpp
-let g:neocomplete#enable_at_startup = 1
 let g:acp_enableAtStartup = 0
 let g:neocomplete#enable_smart_case = 1
 inoremap <expr><C-l> neocomplete#complete_common_string()
+" Define keyword.
+if !exists('g:neocomplete#keyword_patterns')
+    let g:neocomplete#keyword_patterns = {}
+endif
+let g:neocomplete#keyword_patterns['default'] = '\h\w*'
+if !exists('g:neocomplete#sources#omni#input_patterns')
+  let g:neocomplete#sources#omni#input_patterns = {}
+endif
+let g:neocomplete#sources#omni#input_patterns.c = '[^.[:digit:] *\t]\%(\.\|->\)'
+let g:neocomplete#sources#omni#input_patterns.cpp = '[^.[:digit:] *\t]\%(\.\|->\)\|\h\w*::'
 
-" jedi/python complete settings
+
+" jedi/python complete settings [ftplugin]
 let g:jedi#completions_command = '<C-n>'
 let g:jedi#show_call_signatures = "2"
 
-" syntastic 
+" syntastic - auto errors check on :w
 let g:syntastic_always_populate_loc_list = 1
-let g:syntastic_auto_loc_list = 1
-let g:syntastic_check_on_open = 1
-let g:syntastic_check_on_wq = 0
-let g:syntastic_vim_checker = ['vint']
+let g:syntastic_auto_loc_list = 0
+let g:syntastic_error_symbol= '✗'
+let g:syntastic_warning_symbol = '➜'
+let g:syntastic_vim_checkers = ['vint']
+let g:syntastic_vim_vint_quiet_messages = { "!level" : "errors" }
 
-function! SetAutoComplete()
-    if &filetype == "python"
-        NeoCompleteLock         " lock neocomplete
+" set different plugin based on filetype
+function! SetPluginsForFiles()
+    if &filetype ==? "python"
+        NeoCompleteDisable
     else
-        NeoCompleteUnlock       " unlock neocomplete
+        NeoCompleteEnable
+    endif
+
+    if expand("%:p") =~# g:tags_interested_types 
+        let g:syntastic_mode_map = {"mode":"active", "passive_filetypes":[]}
+    else
+        let g:syntastic_mode_map = {"mode":"passive", "active_filetypes":[]}
     endif
 endfunction
 
 augroup pluginsmngr
     au!
-    au BufEnter * call SetAutoComplete()
+    au FileType * call SetPluginsForFiles()
 augroup END
 
 " }}}
