@@ -32,13 +32,7 @@ set background=dark
 colorscheme solarized
 
 " 字体
-if has('mac')
-    set guifont=Menlo:h12
-    set linespace=2
-    set antialias       " Mac OS only
-else
-    set guifont=Droid\ Sans\ Mono:h12
-endif
+set guifont=Droid\ Sans\ Mono:h12
 
 " 显示行号
 set number
@@ -134,7 +128,7 @@ nnoremap <leader>ff :cs find f <C-R>=expand("<cfile>")<CR><CR>      " f: find th
 nnoremap <leader>fi :cs find i ^<C-R>=expand("<cfile>")<CR>$<CR>    " i: find files #include this file
 
 " FIXME: use vim's filetype detection
-let g:tags_interested_types = '\.\(asm\|c\|cpp\|cc\|h\|\java\|py\)$'
+let g:tags_interested_types = '\.\(asm\|c\|cpp\|cc\|h\|\java\|py\|sh\)$'
 let g:tags_ctags_cmd = "ctags --fields=+ailS --c-kinds=+p --c++-kinds=+p --sort=no --extra=+q"
 let g:tags_cscope_cmd = "cscope -bq"
 
@@ -271,35 +265,34 @@ endif
 let g:neocomplete#sources#omni#input_patterns.c = '[^.[:digit:] *\t]\%(\.\|->\)'
 let g:neocomplete#sources#omni#input_patterns.cpp = '[^.[:digit:] *\t]\%(\.\|->\)\|\h\w*::'
 
-
 " jedi/python complete settings [ftplugin]
-let g:jedi#completions_command = '<C-n>'
-let g:jedi#show_call_signatures = "2"
+let g:jedi#popup_select_first = 0
+let g:jedi#show_call_signatures = "1"
 
 " syntastic - auto errors check on :w
 let g:syntastic_always_populate_loc_list = 1
-let g:syntastic_auto_loc_list = 0
+let g:syntastic_auto_loc_list = 2
 let g:syntastic_vim_checkers = ['vint']
 let g:syntastic_vim_vint_quiet_messages = { "!level" : "errors" }
 
 " set different plugin based on filetype
 function! SetPluginsForFiles()
-    if &filetype ==? "python"
-        NeoCompleteDisable
-    else
-        NeoCompleteEnable
-    endif
-
     if expand("%:p") =~# g:tags_interested_types  || &filetype ==? "vim"
         let g:syntastic_mode_map = {"mode":"active", "passive_filetypes":[]}
     else
         let g:syntastic_mode_map = {"mode":"passive", "active_filetypes":[]}
     endif
+
+    if &filetype ==? "python"
+        NeoCompleteDisable
+    else
+        NeoCompleteEnable
+    endif
 endfunction
 
 augroup pluginsmngr
     au!
-    au FileType * call SetPluginsForFiles()
+    au BufEnter * call SetPluginsForFiles()
 augroup END
 
 " }}}
