@@ -33,6 +33,8 @@ colorscheme solarized
 
 " 字体
 set guifont=Droid\ Sans\ Mono:h12
+language en             " always English
+language messages en
 
 " 显示行号
 set number
@@ -253,7 +255,6 @@ let g:tagbar_autoshowtag = 1
 " neocomplete for c/cpp
 let g:acp_enableAtStartup = 0
 let g:neocomplete#enable_smart_case = 1
-inoremap <expr><C-l> neocomplete#complete_common_string()
 " Define keyword.
 if !exists('g:neocomplete#keyword_patterns')
     let g:neocomplete#keyword_patterns = {}
@@ -268,6 +269,7 @@ let g:neocomplete#sources#omni#input_patterns.cpp = '[^.[:digit:] *\t]\%(\.\|->\
 " jedi/python complete settings [ftplugin]
 let g:jedi#popup_select_first = 0
 let g:jedi#show_call_signatures = "1"
+let g:jedi#completions_command = "<C-N>"
 
 " syntastic - auto errors check on :w
 let g:syntastic_always_populate_loc_list = 1
@@ -284,9 +286,9 @@ function! SetPluginsForFiles()
     endif
 
     if &filetype ==? "python"
-        NeoCompleteDisable
+        call neocomplete#init#disable()
     else
-        NeoCompleteEnable
+        call neocomplete#init#enable()
     endif
 endfunction
 
