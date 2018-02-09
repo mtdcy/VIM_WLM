@@ -33,8 +33,10 @@ colorscheme solarized
 
 " 字体
 set guifont=Droid\ Sans\ Mono:h12
-language en             " always English
-language messages en
+if has('gui_win32')         " why this only work on win32 gui
+    language en             " always English
+    language messages en
+endif
 
 " 显示行号
 set number
@@ -93,9 +95,6 @@ map <C-l> <C-W>l
 set completeopt=menuone,longest,preview
 set splitbelow
 
-" For completion. if pumvisible, then next item; else tab
-inoremap <expr><TAB> pumvisible() ? "\<C-n>" : "\<TAB>"
-
 " For buffer explorer
 nnoremap <TAB> :bn<CR>
 nnoremap <S-TAB> :bp<CR>
@@ -116,89 +115,6 @@ set statusline+=\ %y[%{&fenc}][%{&ff}]              " file property
 
 " }}}
 
-" => Tags Management " {{{
-" set cscope key map
-set cscopequickfix=s-,g-,d-,c-,t-,e-,f-,i-                          " ???
-nnoremap <leader>l :cstag <C-R>=expand("<cword>")<CR><CR>           " junp with cscope tag
-nnoremap <leader>fa :cs find a <C-R>=expand("<cword>")<CR><CR>      " a: find assignment to this symbol
-nnoremap <leader>fs :cs find s <C-R>=expand("<cword>")<CR><CR>      " s: find this symbol
-nnoremap <leader>fg :cs find g <C-R>=expand("<cword>")<CR><CR>      " g: find this definition
-nnoremap <leader>fc :cs find c <C-R>=expand("<cword>")<CR><CR>      " c: find functions calling this function
-nnoremap <leader>fd :cs find d <C-R>=expand("<cword>")<CR><CR>      " d: find functions called by this function
-nnoremap <leader>ft :cs find t <C-R>=expand("<cword>")<CR><CR>      " t: find this text string
-nnoremap <leader>ff :cs find f <C-R>=expand("<cfile>")<CR><CR>      " f: find this file
-nnoremap <leader>fi :cs find i ^<C-R>=expand("<cfile>")<CR>$<CR>    " i: find files #include this file
-
-" FIXME: use vim's filetype detection
-let g:tags_interested_types = '\.\(asm\|c\|cpp\|cc\|h\|\java\|py\|sh\)$'
-let g:tags_ctags_cmd = "ctags --fields=+ailS --c-kinds=+p --c++-kinds=+p --sort=no --extra=+q"
-let g:tags_cscope_cmd = "cscope -bq"
-
-" load tags and cscope db
-function! LoadTags()
-    exe "lcd " . expand("%:p:h")
-    let root = fnamemodify(findfile("cscope.files", ".;"), ":p:h")  " project root
-    lcd -
-    exe "lcd " . root
-    if (!empty(root))
-        if (filereadable("tags"))                                   " load ctags
-            exe "set tags=" . root . "/tags"
-        endif
-        if (filereadable("cscope.out"))                             " load cscope db
-            set nocscopeverbose
-            exe "cs add " . root . "/cscope.out " . root
-            set cscopeverbose
-        endif
-    endif
-    lcd -
-endfunction
-
-" create tags and cscope db
-function! CreateTags()
-    let root = input("project root: ", expand("%:p:h"))             " project root
-    exe "lcd " . root
-    let files = glob("**", v:false, v:true)
-    call filter(files, 'filereadable(v:val)')                       " filter out directory
-    call filter(files, 'v:val =~# g:tags_interested_types')          " only interested files
-    call writefile(files, "cscope.files")                           " save list
-    exe "silent !" . g:tags_cscope_cmd . " -i cscope.files"
-    exe "silent !" . g:tags_ctags_cmd . " -L cscope.files"
-    lcd -
-    call LoadTags()
-endfunction
-
-" update tags and cscope db if loaded
-function! UpdateTags()
-    exe "lcd " . expand("%:p:h")
-    let root = fnamemodify(findfile("cscope.files", ".;"), ":p:h")  " project root
-    lcd -
-    exe "lcd " . root
-    let file = fnamemodify(expand("%:p"), ":.")                     " path related to project root
-    if match(file, g:tags_interested_types) >= 0
-        if (!empty(root))
-            if (filewritable("tags"))                               " update ctags
-                exe "silent !" . g:tags_ctags_cmd . " " . file
-                " no need to reload
-            endif
-            if (filewritable("cscope.out"))                         " update cscope db and reload
-                exe "silent !" . g:tags_cscope_cmd . " " . file
-                exe "silent cs reset"
-            endif
-        endif
-    endif
-    lcd -
-endfunction
-
-augroup tagsmngr
-    au!
-    " load tags on BufEnter
-    au BufEnter * call LoadTags()
-    " update tags on :w
-    au BufWritePost * call UpdateTags()
-augroup END
-
-
-"}}}
 
 " => Files "{{{
 "
@@ -243,6 +159,8 @@ augroup END
 "}}}
 
 " => Plugin "{{{
+let g:tags_interested_types = '\.\(asm\|c\|cpp\|cc\|h\|\java\|py\|sh\|vim\)$'
+
 " NERDTreeToggle
 nmap <F9> :NERDTreeToggle <CR>
 
@@ -253,23 +171,20 @@ let g:tagbar_iconchars = ['+', '-']     "
 let g:tagbar_autoshowtag = 1
 
 " neocomplete for c/cpp
+let g:neocomplete#enable_at_startup = 1
+let g:neocomplete#disable_auto_complete = 1
 let g:acp_enableAtStartup = 0
-let g:neocomplete#enable_smart_case = 1
+"let g:neocomplete#enable_smart_case = 1
 " Define keyword.
 if !exists('g:neocomplete#keyword_patterns')
     let g:neocomplete#keyword_patterns = {}
 endif
 let g:neocomplete#keyword_patterns['default'] = '\h\w*'
-if !exists('g:neocomplete#sources#omni#input_patterns')
-  let g:neocomplete#sources#omni#input_patterns = {}
-endif
-let g:neocomplete#sources#omni#input_patterns.c = '[^.[:digit:] *\t]\%(\.\|->\)'
-let g:neocomplete#sources#omni#input_patterns.cpp = '[^.[:digit:] *\t]\%(\.\|->\)\|\h\w*::'
 
 " jedi/python complete settings [ftplugin]
 let g:jedi#popup_select_first = 0
 let g:jedi#show_call_signatures = "1"
-let g:jedi#completions_command = "<C-N>"
+let g:jedi#popup_on_dot = 0
 
 " syntastic - auto errors check on :w
 let g:syntastic_always_populate_loc_list = 1
@@ -278,7 +193,7 @@ let g:syntastic_vim_checkers = ['vint']
 let g:syntastic_vim_vint_quiet_messages = { "!level" : "errors" }
 
 " set different plugin based on filetype
-function! SetPluginsForFiles()
+function! SetupPlugins()
     if expand("%:p") =~# g:tags_interested_types  || &filetype ==? "vim"
         let g:syntastic_mode_map = {"mode":"active", "passive_filetypes":[]}
     else
@@ -286,15 +201,15 @@ function! SetPluginsForFiles()
     endif
 
     if &filetype ==? "python"
-        call neocomplete#init#disable()
+        call neocomplete#commands#_lock()
     else
-        call neocomplete#init#enable()
+        call neocomplete#commands#_unlock()
     endif
 endfunction
 
 augroup pluginsmngr
     au!
-    au BufEnter * call SetPluginsForFiles()
+    au BufEnter * call SetupPlugins()
 augroup END
 
 " }}}
