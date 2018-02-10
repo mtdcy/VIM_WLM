@@ -36,6 +36,8 @@ let g:tags_interested_types = '\.\(asm\|c\|cpp\|cc\|h\|\java\|py\|sh\|vim\)$'
 let s:tags_ctags_cmd = "ctags --fields=+ailS --c-kinds=+p --c++-kinds=+p --sort=no --extra=+q"
 let s:tags_cscope_cmd = "cscope -bq"
 let b:completion = ''
+
+let s:select_first = 1
 " <== END }}}
 
 " ==> Functions for tags management {{{
@@ -135,6 +137,14 @@ endfunction
 " python    - jedi
 " c/cpp     - omnicppcomplete
 " *         - neocomplete
+function! tt#select_first()
+    if exists('s:select_first') && s:select_first == 1
+        return "\<C-N>"
+    else
+        return ""
+    endif
+endfunction
+
 function! tt#supertab()
     if pumvisible()
         " next candidate on pop list
@@ -148,18 +158,19 @@ function! tt#supertab()
             let c = tt#getchar_bofore_cursor()
             if !empty(&omnifunc) && (c == '.' || c == '>' || c == ':')
                 " using omni complete
-                return "\<C-X>\<C-O>"
+                return "\<C-X>\<C-O>" . tt#select_first()
             else
+                " C-N will select first by default
                 return "\<C-N>"
             endif
         elseif &omnifunc != ''
-            return "\<C-X>\<C-O>"
+            return "\<C-X>\<C-O>" . tt#select_first()
         elseif b:completion == 'neocomplete'
             " because of vim's issue, this may not working 
             " https://github.com/Shougo/neocomplete.vim/issues/334
             let s = neocomplete#complete_common_string()
             if empty(s)
-                return neocomplete#start_manual_complete()
+                return neocomplete#start_manual_complete() . tt#select_first()
             else 
                 return s
             endif
@@ -170,9 +181,9 @@ endfunction
 
 function! tt#superbs() 
     if pumvisible()     " undo & close popup
-        if b:completion == 'neocomplete'
-            return neocomplete#undo_completion()
-        endif
+        " if b:completion == 'neocomplete'
+        "    return neocomplete#undo_completion()
+        " endif
         return "\<C-E>"
     endif
     return "\<BS>"
