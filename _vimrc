@@ -111,7 +111,6 @@ set statusline+=\ %y[%{&fenc}][%{&ff}]              " file property
 
 " }}}
 
-
 " => Files "{{{
 "
 " ts    - tabstop       - tab宽度
@@ -155,8 +154,6 @@ augroup END
 "}}}
 
 " => Plugin "{{{
-let g:tags_interested_types = '\.\(asm\|c\|cpp\|cc\|h\|\java\|py\|sh\|vim\)$'
-
 " NERDTreeToggle
 nmap <F9> :NERDTreeToggle <CR>
 
@@ -165,22 +162,6 @@ nmap <F10> :TagbarToggle<CR>
 let g:tagbar_compact = 1                "
 let g:tagbar_iconchars = ['+', '-']     "
 let g:tagbar_autoshowtag = 1
-
-" neocomplete for c/cpp
-let g:neocomplete#enable_at_startup = 1
-"let g:neocomplete#disable_auto_complete = 1
-let g:acp_enableAtStartup = 0
-let g:neocomplete#enable_smart_case = 1
-" Define keyword.
-if !exists('g:neocomplete#keyword_patterns')
-    let g:neocomplete#keyword_patterns = {}
-endif
-let g:neocomplete#keyword_patterns['default'] = '\h\w*'
-
-" jedi/python complete settings [ftplugin]
-let g:jedi#popup_select_first = 0
-let g:jedi#show_call_signatures = "1"
-let g:jedi#popup_on_dot = 0
 
 " syntastic - auto errors check on :w
 let g:syntastic_always_populate_loc_list = 1

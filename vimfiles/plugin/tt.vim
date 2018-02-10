@@ -26,21 +26,19 @@
 
 " simple IDE setup by Chen Fang
 
-" ==> Initialization check {{{
+" ==> options {{{
 if exists("g:simple_ide_setup")
     finish
 endif
 
 let g:simple_ide_setup = 1
-
+let g:tags_interested_types = '\.\(asm\|c\|cpp\|cc\|h\|\java\|py\|sh\|vim\)$'
+let s:tags_ctags_cmd = "ctags --fields=+ailS --c-kinds=+p --c++-kinds=+p --sort=no --extra=+q"
+let s:tags_cscope_cmd = "cscope -bq"
+let b:completion = ''
 " <== END }}}
 
 " ==> Functions for tags management {{{
-
-" FIXME: use vim's filetype detection
-let s:tags_ctags_cmd = "ctags --fields=+ailS --c-kinds=+p --c++-kinds=+p --sort=no --extra=+q"
-let s:tags_cscope_cmd = "cscope -bq"
-
 function! tt#find_project_root()
     if exists('b:project_root')     " cache
         "echo "cached b:project_root: [" . b:project_root . "]"
@@ -61,6 +59,9 @@ endfunction
 
 " load tags and cscope db
 function! tt#tags_load()
+    if expand("%:p") !~? g:tags_interested_types 
+        return
+    endif
     let root = tt#find_project_root()
     if (empty(root))
         return
@@ -84,10 +85,10 @@ function! tt#tags_create()
     exe "lcd " . root
     let files = glob("**", v:false, v:true)
     call filter(files, 'filereadable(v:val)')                       " filter out directory
-    call filter(files, 'v:val =~# g:tags_interested_types')          " only interested files
+    call filter(files, 'v:val =~? g:tags_interested_types')          " only interested files
     call writefile(files, "cscope.files")                           " save list
-    exe "silent !" . s:tags_cscope_cmd . " -i cscope.files"
     exe "silent !" . s:tags_ctags_cmd . " -L cscope.files"
+    exe "silent !" . s:tags_cscope_cmd . " -i cscope.files"
     lcd -
     call tt#tags_load()
 endfunction
@@ -100,7 +101,7 @@ function! tt#tags_update()
     else
         exe "lcd " . root
         let file = fnamemodify(expand("%:p"), ":.")                     " path related to project root
-        if match(file, g:tags_interested_types) >= 0
+        if file =~? g:tags_interested_types 
             let files = readfile("cscope.files")
             if match(files, file) < 0
                 files+=file
@@ -122,44 +123,134 @@ function! tt#tags_update()
 endfunction
 
 function! tt#getchar_bofore_cursor()
-    if col('.') > 0 
+    if col('.') > 1 
         return strpart(getline('.'), col('.') - 2, 1)
     else " empty or space
         return ' '
     endif
 endfunction
 
+" autocomplete 
+" :h ins-completion 
+" python    - jedi
+" c/cpp     - omnicppcomplete
+" *         - neocomplete
 function! tt#supertab()
     if pumvisible()
         " next candidate on pop list
         return "\<C-N>"
-    elseif tt#getchar_bofore_cursor() == ' '
-        " insert tab
-        return "\<TAB>"
-    elseif &ft ==? 'python' &&
-                \ exists(':JediDebugInfo')
-        " using jedi-vim's completion
-        return jedi#complete_string(0)
-    elseif exists('g:neocomplete#disable_auto_complete') && 
-                \ g:neocomplete#disable_auto_complete  &&
-                \ exists(':NeoCompleteToggle')
-        " because of vim's issue, this may not working 
-        " https://github.com/Shougo/neocomplete.vim/issues/334
-        let s = neocomplete#complete_common_string()
-        if empty(s)
-            return neocomplete#start_manual_complete()
-        else
-            return common
+    else
+        let c = tt#getchar_bofore_cursor()
+        if c ==? ' '
+            " insert tab
+            return "\<TAB>"
+        elseif b:completion == 'omnicpp'
+            let c = tt#getchar_bofore_cursor()
+            if !empty(&omnifunc) && (c == '.' || c == '>' || c == ':')
+                " using omni complete
+                return "\<C-X>\<C-O>"
+            else
+                return "\<C-N>"
+            endif
+        elseif &omnifunc != ''
+            return "\<C-X>\<C-O>"
+        elseif b:completion == 'neocomplete'
+            " because of vim's issue, this may not working 
+            " https://github.com/Shougo/neocomplete.vim/issues/334
+            let s = neocomplete#complete_common_string()
+            if empty(s)
+                return neocomplete#start_manual_complete()
+            else 
+                return s
+            endif
         endif
-    else 
-        " omni completion
-        return "\<C-X>\<C-O>"
+    endif
+    return "\<TAB>"
+endfunction
+
+function! tt#superbs() 
+    if pumvisible()     " undo & close popup
+        if b:completion == 'neocomplete'
+            return neocomplete#undo_completion()
+        endif
+        return "\<C-E>"
+    endif
+    return "\<BS>"
+endfunction
+
+function! tt#superenter() 
+endfunction
+
+function! tt#setup_cpp_plugins()
+    " omni cpp
+    let g:OmniCpp_DefaultNamespaces = ['std']
+    let g:OmniCpp_MayCompleteScope = 1
+    call omni#cpp#settings#Init()
+    setlocal complete=.,w,b,u,t,i
+    " omni#cpp#complete#Main has weakness, can't complete keyword from buffer
+    setlocal omnifunc=omni#cpp#complete#Main
+
+    let b:completion = 'omnicpp'
+endfunction
+
+function! tt#setup_python_plugins()
+    " jedi
+    setlocal omnifunc=jedi#completions
+    let g:jedi#show_call_signatures = 2
+    call jedi#configure_call_signatures()
+    nnoremap <silent> <buffer> <S-K> :call jedi#show_documentation()<CR>    " show doc
+    " TODO: jump to assignment for variable, and definition for function/class
+    nnoremap <silent> <buffer> <leader>l :call jedi#goto()<CR>              " goto
+    " other settings
+    command! -nargs=0 -bar JediDebugInfo call jedi#debug_info()
+
+    let b:completion = 'jedi'
+endfunction
+
+" setup plugins for file
+function! tt#setup_plugins()
+    if &ft ==? 'c' || &ft ==? 'cpp'
+        call tt#setup_cpp_plugins()
+    elseif &ft ==? 'python'
+        call tt#setup_python_plugins()
+    else
+        " neocomplete 
+        let g:acp_enableAtStartup = 0
+        let g:neocomplete#enable_smart_case = 0
+        let g:neocomplete#enable_debug = 0
+        let g:neocomplete#disable_auto_complete = 1
+        let g:neocomplete#auto_complete_delay = 200
+        call neocomplete#initialize()
+        inoremap <silent> <buffer> <expr><C-L> neocomplete#complete_common_string()
+        inoremap <silent> <buffer> <expr><C-U> neocomplete#undo_completion()
+        if !exists('g:neocomplete#keyword_patterns')
+            let g:neocomplete#keyword_patterns = {}
+        endif
+        let g:neocomplete#keyword_patterns['default'] = '\h\w*'
+
+        let b:completion = 'neocomplete'
     endif
 endfunction
 
 " <== END }}}
 
 " ==> Configurations {{{
+augroup tagsmngr
+    au!
+    " load tags on BufEnter
+    au BufReadPost * silent call tt#tags_load()
+    " update tags on :w
+    au BufWritePost * silent call tt#tags_update()
+    " omni complete for c,cpp
+    au FileType * call tt#setup_plugins()
+augroup END
+
+" supertab
+inoremap <silent> <expr><TAB>   tt#supertab()
+inoremap <silent> <expr><BS>    tt#superbs()
+nnoremap <silent> <TAB>         :bn<CR>
+nnoremap <silent> <S-TAB>       :bp<CR>
+
 " set cscope key map
 set cscopequickfix=s-,g-,d-,c-,t-,e-,f-,i-                          " ???
 nnoremap <leader>l :cstag <C-R>=expand("<cword>")<CR><CR>           " junp with cscope tag
@@ -171,19 +262,6 @@ nnoremap <leader>fd :cs find d <C-R>=expand("<cword>")<CR><CR>      " d: find fu
 nnoremap <leader>ft :cs find t <C-R>=expand("<cword>")<CR><CR>      " t: find this text string
 nnoremap <leader>ff :cs find f <C-R>=expand("<cfile>")<CR><CR>      " f: find this file
 nnoremap <leader>fi :cs find i ^<C-R>=expand("<cfile>")<CR>$<CR>    " i: find files #include this file
-
-augroup tagsmngr
-    au!
-    " load tags on BufEnter
-    au BufReadPost * call tt#tags_load()
-    " update tags on :w
-    au BufWritePost * call tt#tags_update()
-augroup END
-
-" supertab
-inoremap <expr><TAB>  tt#supertab()
-nnoremap <TAB> :bn<CR>
-nnoremap <S-TAB> :bp<CR>
 
 " <== END }}}
 
