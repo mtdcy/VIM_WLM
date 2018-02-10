@@ -180,10 +180,10 @@ augroup tagsmngr
     au BufWritePost * call tt#tags_update()
 augroup END
 
-
-" For completion. if pumvisible, then next item; else tab
-"inoremap <expr><TAB> pumvisible() ? "\<C-n>" : "\<TAB>"
+" supertab
 inoremap <expr><TAB>  tt#supertab()
+nnoremap <TAB> :bn<CR>
+nnoremap <S-TAB> :bp<CR>
 
 " <== END }}}
 

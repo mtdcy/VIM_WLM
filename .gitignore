@@ -1,2 +1,5 @@
 vim80/*
 vimfiles/pythonx/__pycache__/*
+cscope*
+tags
+.*

@@ -95,10 +95,6 @@ map <C-l> <C-W>l
 set completeopt=menuone,longest,preview
 set splitbelow
 
-" For buffer explorer
-nnoremap <TAB> :bn<CR>
-nnoremap <S-TAB> :bp<CR>
-
 " }}}
 
 " => Status Line {{{
@@ -172,9 +168,9 @@ let g:tagbar_autoshowtag = 1
 
 " neocomplete for c/cpp
 let g:neocomplete#enable_at_startup = 1
-let g:neocomplete#disable_auto_complete = 1
+"let g:neocomplete#disable_auto_complete = 1
 let g:acp_enableAtStartup = 0
-"let g:neocomplete#enable_smart_case = 1
+let g:neocomplete#enable_smart_case = 1
 " Define keyword.
 if !exists('g:neocomplete#keyword_patterns')
     let g:neocomplete#keyword_patterns = {}
