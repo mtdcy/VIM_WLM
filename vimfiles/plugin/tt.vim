@@ -61,23 +61,22 @@ endfunction
 
 " load tags and cscope db
 function! tt#tags_load()
-    if expand("%:p") !~? g:tags_interested_types 
-        return
-    endif
-    let root = tt#find_project_root()
-    if (empty(root))
-        return
-    else
-        exe "lcd " . root
-        if (filereadable("tags"))                                   " load ctags
-            exe "set tags=" . root . "/tags"
+    if expand("%:p") =~? g:tags_interested_types 
+        let root = tt#find_project_root()
+        if (empty(root))
+            return
+        else
+            exe "lcd " . root
+            if (filereadable("tags"))                                   " load ctags
+                exe "set tags=" . root . "/tags"
+            endif
+            if (filereadable("cscope.out"))                             " load cscope db
+                set nocscopeverbose
+                exe "cs add " . root . "/cscope.out " . root
+                set cscopeverbose
+            endif
+            lcd -
         endif
-        if (filereadable("cscope.out"))                             " load cscope db
-            set nocscopeverbose
-            exe "cs add " . root . "/cscope.out " . root
-            set cscopeverbose
-        endif
-        lcd -
     endif
 endfunction
 
@@ -124,12 +123,12 @@ function! tt#tags_update()
     endif
 endfunction
 
-function! tt#getchar_bofore_cursor()
-    if col('.') > 1 
-        return strpart(getline('.'), col('.') - 2, 1)
-    else " empty or space
-        return ' '
-    endif
+function! tt#gettext_before_cursor()
+    if col('.') > 1
+        return strpart(getline('.'), 0, col('.') - 1)
+    else
+        return ''
+    endif 
 endfunction
 
 " autocomplete 
@@ -150,18 +149,17 @@ function! tt#supertab()
         " next candidate on pop list
         return "\<C-N>"
     else
-        let c = tt#getchar_bofore_cursor()
-        if c ==? ' '
+        let word = tt#gettext_before_cursor()
+        if word =~? ' $'
             " insert tab
             return "\<TAB>"
         elseif b:completion == 'omnicpp'
-            let c = tt#getchar_bofore_cursor()
-            if !empty(&omnifunc) && (c == '.' || c == '>' || c == ':')
-                " using omni complete
+            if !empty(&omnifunc) && (word =~? '\(\.\|>\|:\)$')
+                " using omni complete, by tags
                 return "\<C-X>\<C-O>" . tt#select_first()
             else
                 " C-N will select first by default
-                return "\<C-N>"
+                return "\<C-N>" . tt#select_first()
             endif
         elseif &omnifunc != ''
             return "\<C-X>\<C-O>" . tt#select_first()
@@ -190,6 +188,10 @@ function! tt#superbs()
 endfunction
 
 function! tt#superenter() 
+    if pumvisible()
+        return "\<C-Y>"
+    else
+        return "\<Enter>"
 endfunction
 
 function! tt#setup_cpp_plugins()
@@ -198,7 +200,7 @@ function! tt#setup_cpp_plugins()
     let g:OmniCpp_MayCompleteScope = 1
     call omni#cpp#settings#Init()
     setlocal complete=.,w,b,u,t,i
-    " omni#cpp#complete#Main has weakness, can't complete keyword from buffer
+    " omni#cpp#complete#Main has weakness, only complete from tags
     setlocal omnifunc=omni#cpp#complete#Main
 
     let b:completion = 'omnicpp'
@@ -259,6 +261,7 @@ augroup END
 " supertab
 inoremap <silent> <expr><TAB>   tt#supertab()
 inoremap <silent> <expr><BS>    tt#superbs()
+inoremap <silent> <expr><Enter> tt#superenter()
 nnoremap <silent> <TAB>         :bn<CR>
 nnoremap <silent> <S-TAB>       :bp<CR>
 
