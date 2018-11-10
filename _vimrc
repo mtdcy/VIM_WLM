@@ -91,10 +91,6 @@ map <C-k> <C-W>k
 map <C-h> <C-W>h
 map <C-l> <C-W>l
 
-" set completopt and preview window on the bottom
-set completeopt=menuone,longest,preview
-set splitbelow
-
 " }}}
 
 " => Status Line {{{
