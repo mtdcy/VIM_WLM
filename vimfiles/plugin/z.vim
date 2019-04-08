@@ -238,12 +238,14 @@ function! z#setup_completion()
     " :h 'complete'
     set complete=.,w,b,u,t,i
 
+    call neocomplete#commands#_lock()
     if &ft ==? 'c' || &ft ==? 'cpp'
         call z#setup_cpp_plugins()
     elseif &ft ==? 'python'
         call z#setup_python_plugins()
     else
         " neocomplete 
+        call neocomplete#commands#_unlock()
         let g:acp_enableAtStartup = 0
         let g:neocomplete#enable_smart_case = 0
         let g:neocomplete#enable_debug = 0

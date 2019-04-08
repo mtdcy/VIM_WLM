@@ -32,10 +32,16 @@ set background=dark
 colorscheme solarized
 
 " 字体
-set guifont=Droid\ Sans\ Mono:h12
-if has('gui_win32')         " why this only work on win32 gui
-    language en             " always English
-    language messages en
+if has('gui_running')
+    if has('linux')
+        set guifont=Droid\ Sans\ Mono\ 12
+    else
+        set guifont=Droid\ Sans\ Mono:h12
+    endif
+    if has('gui_win32')         " why this only work on win32 gui
+        language en             " always English
+        language messages en
+    endif
 endif
 
 " 显示行号
@@ -64,6 +70,7 @@ set cursorline
 
 " 语法高亮
 syntax on
+set regexpengine=1  " force old regex engine, solve slow problem
 
 " 使用非兼容模式
 set nocompatible
@@ -84,6 +91,9 @@ let mapleader = ";"
 
 " set backspace behavior
 set backspace=indent,eol,start
+
+" no bracket match 
+set noshowmatch
 
 " Smart way to move btw. windows
 map <C-j> <C-W>j
@@ -126,6 +136,7 @@ set ts=4 sts=4 sw=4 et ff=unix
 
 " fold default by marker
 set foldmethod=marker
+set foldlevelstart=99
 
 function! JumpToLastPos()
     if line("'\"") > 0 && line ("'\"") <= line("$") && &ft !~# 'commit'
@@ -161,7 +172,7 @@ let g:tagbar_autoshowtag = 1
 
 " syntastic - auto errors check on :w
 let g:syntastic_always_populate_loc_list = 1
-let g:syntastic_auto_loc_list = 2
+let g:syntastic_auto_loc_list = 0
 let g:syntastic_vim_checkers = ['vint']
 let g:syntastic_vim_vint_quiet_messages = { "!level" : "errors" }
 
@@ -171,12 +182,6 @@ function! SetupPlugins()
         let g:syntastic_mode_map = {"mode":"active", "passive_filetypes":[]}
     else
         let g:syntastic_mode_map = {"mode":"passive", "active_filetypes":[]}
-    endif
-
-    if &filetype ==? "python"
-        call neocomplete#commands#_lock()
-    else
-        call neocomplete#commands#_unlock()
     endif
 endfunction
 
