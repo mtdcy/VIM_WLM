@@ -43,6 +43,7 @@ if has('gui_running')
         language messages en
     endif
 endif
+set antialias
 
 " 显示行号
 set number
@@ -67,6 +68,7 @@ set hidden
 
 " 高亮当前行
 set cursorline
+set nocursorcolumn
 
 " 语法高亮
 syntax on
@@ -88,6 +90,7 @@ set showcmd
 
 " 设置mapleader
 let mapleader = ";"
+let g:mapleader = ";"
 
 " set backspace behavior
 set backspace=indent,eol,start
@@ -157,6 +160,9 @@ augroup cfiles
     au FileType c,cpp setlocal tw=79 ff=unix
     au FileType c,cpp setlocal fdm=syntax
 augroup END
+
+" For LiteOS project
+au FileType *.pkg setlocal filetype=sh
 
 "}}}
 
